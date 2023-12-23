@@ -3,6 +3,8 @@ package com.su.controller;
 
 import com.su.common.response.ResultResponse;
 import com.su.domain.vo.EmailVO;
+import com.su.domain.vo.LoginVO;
+import com.su.domain.vo.RegisterVO;
 import com.su.service.AccountService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,14 +33,14 @@ public class AccountController {
 
     @ApiOperation("登录接口")
     @PostMapping("login")
-    public ResultResponse login() {
-        return null;
+    public ResultResponse login(@RequestBody LoginVO loginVO) {
+        return ResultResponse.success(accountService.login(loginVO));
     }
 
     @ApiOperation("注册接口")
     @PostMapping("register")
-    public ResultResponse register() {
-        return null;
+    public ResultResponse register(@RequestBody RegisterVO registerVO) {
+        return ResultResponse.success(accountService.register(registerVO));
     }
 
     @ApiOperation("发送邮箱验证码")

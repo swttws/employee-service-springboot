@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import com.su.base.BaseEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * <p>
@@ -22,6 +23,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @TableName("account")
 @ApiModel(value = "Account对象", description = "")
+@Data
 public class Account extends BaseEntity implements Serializable{
 
     private static final long serialVersionUID = 1L;

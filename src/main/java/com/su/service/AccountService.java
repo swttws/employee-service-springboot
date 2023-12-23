@@ -1,6 +1,8 @@
 package com.su.service;
 
 import com.su.domain.vo.EmailVO;
+import com.su.domain.vo.LoginVO;
+import com.su.domain.vo.RegisterVO;
 import com.su.pojo.Account;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -21,4 +23,17 @@ public interface AccountService extends IService<Account> {
      */
     Boolean sendEmsCode(EmailVO emailVO);
 
+    /**
+     * 注册接口
+     * @param registerVO
+     * @return
+     */
+    Boolean register(RegisterVO registerVO);
+
+    /**
+     * 登录接口
+     * @param loginVO
+     * @return 返回token
+     */
+    String login(LoginVO loginVO);
 }
