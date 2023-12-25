@@ -1,15 +1,14 @@
 server:
-  port: 8080 #端口号
+  port: 7071 #端口号
 
 spring:
   datasource:
     password: 217812.com #数据库用户名
     username: root #数据库密码
-    #springboot-common需要切换为对应数据库
-    url: jdbc:mysql://localhost:3306/springboot-common?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/obtain-employee?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
-    name: application #项目名称
+    name: employee-service #项目名称
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -27,12 +26,19 @@ su:
 
 #swagger文档相关配置
   document:
-    title: xxx网站 #swagger网站名称
-    description: xxx描述 #swagger文档描述
-    username: xxx用户  #文档用户名
+    title: employee-service #swagger网站名称
+    description: 服务文档 #swagger文档描述
+    username: swt  #文档用户名
     email: xx  #邮箱
     enable: true  #是否开启swagger文档，true开启
     scanPacket: com.su #扫描的包
+
+#邮箱发送验证码配置
+msm:
+  email: 2178127391@qq.com
+  host: smtp.qq.com
+  port: 587
+  password: ygpzxmggwfgtdjad
 
 
 
