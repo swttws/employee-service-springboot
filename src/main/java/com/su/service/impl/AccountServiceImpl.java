@@ -1,6 +1,5 @@
 package com.su.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.su.common.exception.MyException;
 import com.su.constant.RedisConstant;
@@ -8,7 +7,7 @@ import com.su.domain.vo.EmailVO;
 import com.su.domain.vo.LoginVO;
 import com.su.domain.vo.RegisterVO;
 import com.su.enums.ResponseMsgEnum;
-import com.su.pojo.Account;
+import com.su.domain.pojo.Account;
 import com.su.mapper.AccountMapper;
 import com.su.service.AccountService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

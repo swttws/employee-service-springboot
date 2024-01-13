@@ -28,7 +28,7 @@ public class GeneratorCode {
                 })
                 .packageConfig(builder -> {
                     builder.parent("com.su") // 设置父包名
-                            .entity("pojo")
+                            .entity("domain.pojo")
                             .service("service")
                             .controller("controller")
                             .mapper("mapper")
@@ -36,7 +36,7 @@ public class GeneratorCode {
                             .pathInfo(Collections.singletonMap(OutputFile.mapperXml, "D:\\java-mianshi\\Audition\\java-PlateForm-app\\src\\main\\resources\\mapper")); // 设置mapperXml生成路;
                 })
                 .strategyConfig(builder -> {
-                    builder.addInclude("a") // 设置需要生成的表名
+                    builder.addInclude("catagory") // 设置需要生成的表名
                             .entityBuilder()
                             .enableTableFieldAnnotation()
                             .addTableFills(new Column("create_time", FieldFill.INSERT))

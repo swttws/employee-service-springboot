@@ -6,6 +6,6 @@ package com.su.constant;
 public class CommonConstant {
 
     //请求头token
-    public static final String TOKEN="token";
+    public static final String TOKEN="Token";
 
 }

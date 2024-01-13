@@ -6,7 +6,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.su.pojo.Account;
+import com.su.domain.pojo.Account;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.UnsupportedEncodingException;
@@ -80,7 +80,7 @@ public class JwtUtils {
             DecodedJWT decode = JWT.decode(token);
             long tokenTime = decode.getExpiresAt().getTime();
             long nowTime = System.currentTimeMillis();
-            if (tokenTime + TIME_OUT > nowTime) {
+            if (tokenTime < nowTime) {
                 log.info("token过期");
                 return false;
             }

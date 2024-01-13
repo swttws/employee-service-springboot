@@ -1,6 +1,6 @@
 package com.su.mapper;
 
-import com.su.domain.pojo.Account;
+import com.su.domain.pojo.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -10,9 +10,9 @@ import org.apache.ibatis.annotations.Mapper;
  * </p>
  *
  * @author swt 2023-12-18
- * @since 2023-12-19
+ * @since 2023-12-26
  */
 @Mapper
-public interface AccountMapper extends BaseMapper<Account> {
+public interface ArticleMapper extends BaseMapper<Article> {
 
 }

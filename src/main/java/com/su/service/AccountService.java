@@ -3,7 +3,7 @@ package com.su.service;
 import com.su.domain.vo.EmailVO;
 import com.su.domain.vo.LoginVO;
 import com.su.domain.vo.RegisterVO;
-import com.su.pojo.Account;
+import com.su.domain.pojo.Account;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

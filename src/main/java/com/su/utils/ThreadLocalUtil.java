@@ -1,6 +1,6 @@
 package com.su.utils;
 
-import com.su.pojo.Account;
+import com.su.domain.pojo.Account;
 
 /**
  * @author suweitao
