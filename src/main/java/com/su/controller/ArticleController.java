@@ -38,7 +38,18 @@ public class ArticleController {
         return ResultResponse.success(articleService.saveOrUpdateArticle(articleVO));
     }
 
+    @ApiOperation("文章发布，第二步骤")
+    @PostMapping("sendArticle")
+    public ResultResponse sendArticle(@RequestBody ArticleVO articleVO){
+        articleService.sendArticle(articleVO);
+        return ResultResponse.success();
+    }
 
+    @ApiOperation("根据id查询文章信息")
+    @GetMapping("getById/{id}")
+    public ResultResponse getById(@PathVariable("id") Integer id){
+        return ResultResponse.success(articleService.getById(id));
+    }
 
 }
 

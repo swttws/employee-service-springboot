@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import com.su.base.BaseEntity;
 import io.swagger.annotations.ApiModel;
@@ -46,7 +47,7 @@ public class Article extends BaseEntity implements Serializable {
 
     @ApiModelProperty("文章发布时间")
     @TableField("send_time")
-    private LocalDateTime sendTime;
+    private Date sendTime;
 
     @ApiModelProperty("文章封面")
     @TableField("cover")

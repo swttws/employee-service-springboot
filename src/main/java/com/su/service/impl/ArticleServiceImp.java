@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +21,7 @@ import java.util.Objects;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author swt 2023-12-18
@@ -32,6 +33,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     /**
      * 图片上传
+     *
      * @return
      */
     @Override
@@ -47,17 +49,18 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     @Override
     public Integer saveOrUpdateArticle(ArticleVO articleVO) {
-        if(StringUtils.isEmpty(articleVO.getContent()) ||StringUtils.isEmpty(articleVO.getTitle())){
-            throw new MyException(500,"标题/内容不能为空");
+        if (StringUtils.isEmpty(articleVO.getContent()) || StringUtils.isEmpty(articleVO.getTitle())) {
+            throw new MyException(500, "标题/内容不能为空");
         }
-        Article article=baseMapper.selectById(articleVO.getId());
+        Article article = baseMapper.selectById(articleVO.getId());
         //修改操作
-        if(ObjectUtils.isNotEmpty(article)){
+        if (ObjectUtils.isNotEmpty(article)) {
             article.setContent(articleVO.getContent());
             article.setTitle(articleVO.getTitle());
             baseMapper.updateById(article);
-        }else{
-            article=new Article();
+        } else {
+            article = new Article();
+            article.setIsDeleted(true);
             article.setContent(articleVO.getContent());
             article.setTitle(articleVO.getTitle());
             Account account = ThreadLocalUtil.getAccount();
@@ -65,6 +68,30 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
             baseMapper.insert(article);
         }
         return article.getId();
+    }
+
+    /**
+     * 文章发布或修改
+     *
+     * @param articleVO
+     */
+    @Override
+    public void sendArticle(ArticleVO articleVO) {
+        if (ObjectUtils.isEmpty(articleVO.getGroupName()) || ObjectUtils.isEmpty(articleVO.getSendTime())
+                || ObjectUtils.isEmpty(articleVO.getType())) {
+            throw new MyException(500, "文章类型、时间或权限不能为空");
+        }
+        //查询文章
+        Article article = baseMapper.selectById(articleVO.getId());
+        if(Objects.isNull(article)){
+            throw new MyException(500,"系统异常,请联系管理员");
+        }
+        BeanUtils.copyProperties(articleVO,article);
+        //设置为发布状态
+        article.setIsDeleted(false);
+        baseMapper.updateById(article);
+        //通知mq，将文章数据写入es
+
     }
 }
 

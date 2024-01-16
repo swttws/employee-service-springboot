@@ -28,4 +28,9 @@ public interface ArticleService extends IService<Article> {
      */
     Integer saveOrUpdateArticle(ArticleVO articleVO);
 
+    /**
+     * 文章发布
+     * @param articleVO
+     */
+    void sendArticle(ArticleVO articleVO);
 }

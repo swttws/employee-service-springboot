@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author suweitao
@@ -28,7 +29,7 @@ public class ArticleVO {
 
     @ApiModelProperty("文章发布时间")
     @TableField("send_time")
-    private LocalDateTime sendTime;
+    private Date sendTime;
 
     @ApiModelProperty("文章封面")
     @TableField("cover")
