@@ -5,13 +5,16 @@ import com.su.domain.pojo.Account;
 import com.su.domain.pojo.Article;
 import com.su.domain.vo.ArticleVO;
 import com.su.mapper.ArticleMapper;
+import com.su.mq.producer.RabbitProducer;
 import com.su.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.su.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +33,9 @@ import java.util.Objects;
 @Service
 @Slf4j
 public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+
+    @Autowired
+    private RabbitProducer rabbitProducer;
 
     /**
      * 图片上传
@@ -91,7 +97,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         article.setIsDeleted(false);
         baseMapper.updateById(article);
         //通知mq，将文章数据写入es
-
+        rabbitProducer.send(article,String.valueOf(article.getId()));
     }
 }
 
