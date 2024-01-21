@@ -92,12 +92,15 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         if(Objects.isNull(article)){
             throw new MyException(500,"系统异常,请联系管理员");
         }
-        BeanUtils.copyProperties(articleVO,article);
+        article.setGroupId(articleVO.getGroupId());
+        article.setGroupName(articleVO.getGroupName());
+        article.setSendTime(articleVO.getSendTime());
+        article.setType(articleVO.getType());
         //设置为发布状态
         article.setIsDeleted(false);
         baseMapper.updateById(article);
         //通知mq，将文章数据写入es
-        rabbitProducer.send(article,String.valueOf(article.getId()));
+        rabbitProducer.send(article);
     }
 }
 

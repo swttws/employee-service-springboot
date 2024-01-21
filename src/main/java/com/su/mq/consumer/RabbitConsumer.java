@@ -1,5 +1,7 @@
 package com.su.mq.consumer;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.su.config.RabbitMQConfig;
@@ -33,10 +35,11 @@ public class RabbitConsumer {
      * 监听es写入消费者
      */
     @RabbitListener(queues = RabbitMQConfig.TOPIC_QUEUE_NAME_ES)
-    public void handEsMessage(Article article){
+    public void handEsMessage(String message){
         log.info("-------------文章ES消费者开始消费------------------");
+        Article article = JSONObject.parseObject(message, Article.class);
         ArticleEsEntity articleEsEntity = new ArticleEsEntity();
-        BeanUtils.copyProperties(articleEsEntity,article);
+        BeanUtils.copyProperties(article,articleEsEntity);
         articleEsEntity.setCollectNum(0);
         articleEsEntity.setPraiseNum(0);
         articleEsEntity.setViewNum(0);
@@ -48,6 +51,7 @@ public class RabbitConsumer {
                     //文档不存在则插入
                     .docAsUpsert(true);
            restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
+           log.info("---------ES消费者消费成功--------");
         } catch (Exception e) {
             log.info("------------ES消费者消息消息异常-------------");
             e.printStackTrace();
