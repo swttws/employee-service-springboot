@@ -1,9 +1,13 @@
 package com.su.service;
 
+import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.pojo.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.su.domain.vo.ArticleVO;
+import com.su.domain.vo.SearchVO;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * <p>
@@ -33,4 +37,10 @@ public interface ArticleService extends IService<Article> {
      * @param articleVO
      */
     void sendArticle(ArticleVO articleVO);
+
+    /**
+     * 首页文章显示
+     * @return
+     */
+    SearchVO search();
 }

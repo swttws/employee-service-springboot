@@ -1,9 +1,14 @@
 package com.su.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.su.common.exception.MyException;
+import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.pojo.Account;
 import com.su.domain.pojo.Article;
 import com.su.domain.vo.ArticleVO;
+import com.su.domain.vo.SearchVO;
 import com.su.mapper.ArticleMapper;
 import com.su.mq.producer.RabbitProducer;
 import com.su.service.ArticleService;
@@ -12,6 +17,19 @@ import com.su.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -36,6 +55,9 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     @Autowired
     private RabbitProducer rabbitProducer;
+
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
 
     /**
      * 图片上传
@@ -89,8 +111,8 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         }
         //查询文章
         Article article = baseMapper.selectById(articleVO.getId());
-        if(Objects.isNull(article)){
-            throw new MyException(500,"系统异常,请联系管理员");
+        if (Objects.isNull(article)) {
+            throw new MyException(500, "系统异常,请联系管理员");
         }
         article.setGroupId(articleVO.getGroupId());
         article.setGroupName(articleVO.getGroupName());
@@ -101,6 +123,58 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         baseMapper.updateById(article);
         //通知mq，将文章数据写入es
         rabbitProducer.send(article);
+    }
+
+    /**
+     * 首页文章显示
+     *
+     * @return
+     */
+    @Override
+    public SearchVO search() {
+        SearchVO searchVO = new SearchVO();
+        try {
+            //查询文章数据
+            SearchRequest searchRequest = new SearchRequest("article_es_entity");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.sort(SortBuilders.fieldSort("viewNum").order(SortOrder.DESC));
+            searchRequest.source(searchSourceBuilder);
+            SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            //处理返回结果
+            SearchHit[] hits = response.getHits().getHits();
+            List<SearchHit> searchHits = Arrays.asList(hits);
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<ArticleEsEntity> articleEsEntityList = searchHits.stream().map(hit -> {
+                //json字符串转换为实体类
+                try {
+                    return objectMapper.readValue(hit.getSourceAsString(), ArticleEsEntity.class);
+                } catch (JsonProcessingException e) {
+                    log.info("es返回结果转换实体类错误");
+                    e.printStackTrace();
+                }
+                return null;
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+            searchVO.setArticleEsEntityList(articleEsEntityList);
+
+            //查询分类数据
+            searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.aggregation(AggregationBuilders.terms("group_agg")
+                    .field("groupName"));
+            searchSourceBuilder.size(0);
+            searchRequest.source(searchSourceBuilder);
+            response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            //获取分类数据，map
+            Terms group_agg = response.getAggregations().get("group_agg");
+            List<? extends Terms.Bucket> buckets = group_agg.getBuckets();
+            searchVO.setGroupNameList(buckets.stream()
+                    .map(MultiBucketsAggregation.Bucket::getKeyAsString)
+                    .collect(Collectors.toList()));
+        } catch (IOException ioException) {
+            log.info("查询es文章数据异常");
+            throw new MyException(500, "查询数据异常，请联系管理员");
+        }
+
+        return searchVO;
     }
 }
 

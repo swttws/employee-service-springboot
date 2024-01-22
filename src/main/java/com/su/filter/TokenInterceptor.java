@@ -20,6 +20,8 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author suweitao
@@ -32,6 +34,10 @@ public class TokenInterceptor implements HandlerInterceptor {
     private AccountMapper accountMapper;
 
     private final GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
+
+    private final List<String> url = Arrays.asList("/account/login", "/account/register",
+            "/account/sendEmsCode", "/article/upload","/article/search","/error");
+
 
     /**
      * 获取用户信息，存入ThreadLocal
@@ -53,8 +59,7 @@ public class TokenInterceptor implements HandlerInterceptor {
         }
         //放行登录、注册、发送邮箱验证码请求
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/account/login") || requestURI.equals("/account/register")
-                || requestURI.equals("/account/sendEmsCode") || requestURI.equals("/article/upload")) {
+        if (url.contains(requestURI)) {
             return true;
         }
         String token = request.getHeader(CommonConstant.TOKEN);

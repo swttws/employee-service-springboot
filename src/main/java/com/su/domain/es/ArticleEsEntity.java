@@ -60,7 +60,7 @@ public class ArticleEsEntity {
     private Integer groupId;
 
     @ApiModelProperty("分类名称")
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private String groupName;
 
     @ApiModelProperty("浏览数")

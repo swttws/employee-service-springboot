@@ -51,5 +51,11 @@ public class ArticleController {
         return ResultResponse.success(articleService.getById(id));
     }
 
+    @ApiOperation("首页文章展示")
+    @GetMapping("search")
+    public ResultResponse search(){
+        return ResultResponse.success(articleService.search());
+    }
+
 }
 
