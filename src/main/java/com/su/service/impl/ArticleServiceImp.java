@@ -39,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -105,8 +106,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
      */
     @Override
     public void sendArticle(ArticleVO articleVO) {
-        if (ObjectUtils.isEmpty(articleVO.getGroupName()) || ObjectUtils.isEmpty(articleVO.getSendTime())
-                || ObjectUtils.isEmpty(articleVO.getType())) {
+        if (ObjectUtils.isEmpty(articleVO.getGroupName()) || ObjectUtils.isEmpty(articleVO.getType())) {
             throw new MyException(500, "文章类型、时间或权限不能为空");
         }
         //查询文章
@@ -166,9 +166,17 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
             //获取分类数据，map
             Terms group_agg = response.getAggregations().get("group_agg");
             List<? extends Terms.Bucket> buckets = group_agg.getBuckets();
-            searchVO.setGroupNameList(buckets.stream()
+            List<String> groupNameList = buckets.stream()
                     .map(MultiBucketsAggregation.Bucket::getKeyAsString)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
+            //集合转换为hashmap，key:name,value:groupName
+            List<Map<String, String>> result = new ArrayList<>();
+            groupNameList.forEach(groupName -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("name", groupName);
+                result.add(map);
+            });
+            searchVO.setGroupNameList(result);
         } catch (IOException ioException) {
             log.info("查询es文章数据异常");
             throw new MyException(500, "查询数据异常，请联系管理员");

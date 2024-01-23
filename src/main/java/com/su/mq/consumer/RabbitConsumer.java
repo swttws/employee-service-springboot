@@ -8,6 +8,7 @@ import com.su.config.RabbitMQConfig;
 import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.es.annoation.EsIndex;
 import com.su.domain.pojo.Article;
+import com.su.mapper.AccountMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -31,6 +32,9 @@ public class RabbitConsumer {
     @Autowired
     private RestHighLevelClient restHighLevelClient;
 
+    @Autowired
+    private AccountMapper accountMapper;
+
     /**
      * 监听es写入消费者
      */
@@ -44,6 +48,8 @@ public class RabbitConsumer {
         articleEsEntity.setPraiseNum(0);
         articleEsEntity.setViewNum(0);
         articleEsEntity.setCommentNum(0);
+        articleEsEntity.setUserName(accountMapper.selectById(article.getUserId()).getUsername());
+        articleEsEntity.setCreateTime(article.getCreateTime());
         //文章数据写入es
         try {
             UpdateRequest updateRequest = new UpdateRequest("article_es_entity", String.valueOf(article.getId()))

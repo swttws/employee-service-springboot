@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author suweitao
@@ -17,6 +18,6 @@ public class SearchVO implements Serializable {
     private List<ArticleEsEntity> articleEsEntityList;
 
     @ApiModelProperty("首页文章分类标签")
-    private List<String> groupNameList;
+    private List<Map<String,String>> groupNameList;
 
 }

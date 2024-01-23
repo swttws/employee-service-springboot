@@ -9,6 +9,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -66,4 +67,12 @@ public class ArticleEsEntity {
     @ApiModelProperty("浏览数")
     @Field(type = FieldType.Integer)
     private Integer viewNum;
+
+    @ApiModelProperty("用户名")
+    @Field(type = FieldType.Text,analyzer = "ik_max_word")
+    private String userName;
+
+    @ApiModelProperty("创建时间")
+    @Field(type = FieldType.Date)
+    private Date createTime;
 }
