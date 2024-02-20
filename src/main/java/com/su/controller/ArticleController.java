@@ -57,5 +57,17 @@ public class ArticleController {
         return ResultResponse.success(articleService.search());
     }
 
+    @ApiOperation("敏感词过滤")
+    @GetMapping("/filterWord")
+    public ResultResponse filterWord(@RequestParam("word") String word){
+        return ResultResponse.success(articleService.filterWord(word));
+    }
+
+    @ApiOperation("搜索页面搜索接口")
+    @GetMapping("searchByCondition")
+    public ResultResponse searchByCondition(@RequestParam("query") String query){
+        return ResultResponse.success(articleService.searchByCondition(query));
+    }
+
 }
 

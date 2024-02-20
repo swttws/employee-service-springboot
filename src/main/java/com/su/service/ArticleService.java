@@ -43,4 +43,18 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     SearchVO search();
+
+    /**
+     * 根据条件查询es文章
+     * @param query
+     * @return
+     */
+    List<SearchVO> searchByCondition(String query);
+
+    /**
+     * 过滤敏感词
+     * @param word
+     * @return
+     */
+    String filterWord(String word);
 }

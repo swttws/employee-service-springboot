@@ -14,6 +14,7 @@ import com.su.mq.producer.RabbitProducer;
 import com.su.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.su.utils.ThreadLocalUtil;
+import com.su.utils.TrimTreeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,8 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     @Autowired
     private RestHighLevelClient restHighLevelClient;
+
+    private static final String REPLACE_WORD="**";
 
     /**
      * 图片上传
@@ -183,6 +186,74 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         }
 
         return searchVO;
+    }
+
+    /**
+     * 过滤敏感词
+     * @param word
+     * @return
+     */
+    @Override
+    public String filterWord(String word) {
+        if (StringUtils.isBlank(word)){
+            return "";
+        }
+        //指针1指向字典树根节点
+        TrimTreeUtil.Trim beginTrim=TrimTreeUtil.trim;
+        //替换的字符串
+        StringBuilder stringBuilder=new StringBuilder();
+        //两个指针指向字符串区间
+        int begin=0;
+        int end=0;
+        while (end<word.length()){
+            char c = word.charAt(end);
+            //为标点符号
+            if (TrimTreeUtil.isSymbol(c)){
+                //begin对应的字符不在字典树中
+                if (beginTrim==TrimTreeUtil.trim){
+                    stringBuilder.append(c);//符号追加
+                    begin++;
+                }
+                end++;
+                continue;
+            }
+            //获取子节点
+            beginTrim = beginTrim.getSubTrim(c);
+            //字符不存在字典树中
+            if (beginTrim==null){
+                //begin字符不是敏感词
+                stringBuilder.append(word.charAt(begin));
+                end=++begin;
+                beginTrim=TrimTreeUtil.trim;
+            }
+            //字符存在字典树中，且为结尾
+            else if (beginTrim.getIsEnd()){
+                //采用*替代字符串
+                stringBuilder.append(REPLACE_WORD);
+                begin=++end;
+                //字典树回到根节点
+                beginTrim=TrimTreeUtil.trim;
+            }
+            //字符在字典树
+            else {
+                //继续查找下一个字符
+                end++;
+            }
+        }
+        //添加剩余字符串
+        stringBuilder.append(word.substring(begin));
+        return stringBuilder.toString();
+    }
+
+    /**
+     * 根据条件查询es文章数据
+     * @param query
+     * @return
+     */
+    @Override
+    public List<SearchVO> searchByCondition(String query) {
+
+        return null;
     }
 }
 
