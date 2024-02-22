@@ -53,8 +53,8 @@ public class ArticleController {
 
     @ApiOperation("首页文章展示")
     @GetMapping("search")
-    public ResultResponse search(){
-        return ResultResponse.success(articleService.search());
+    public ResultResponse search(@RequestParam("query") String query){
+        return ResultResponse.success(articleService.search(query));
     }
 
     @ApiOperation("敏感词过滤")
@@ -63,11 +63,22 @@ public class ArticleController {
         return ResultResponse.success(articleService.filterWord(word));
     }
 
-    @ApiOperation("搜索页面搜索接口")
-    @GetMapping("searchByCondition")
-    public ResultResponse searchByCondition(@RequestParam("query") String query){
-        return ResultResponse.success(articleService.searchByCondition(query));
+    @ApiOperation("添加历史搜索记录")
+    @GetMapping("addSearchWord")
+    public ResultResponse addSearchWord(@RequestParam("word") String word){
+        return ResultResponse.success(articleService.addSearchWord(word));
     }
 
+    @ApiOperation("删除历史搜索记录")
+    @GetMapping("deleteSearchWord")
+    public ResultResponse deleteSearchWord(){
+        return ResultResponse.success(articleService.deleteSearchWord());
+    }
+
+    @ApiOperation("展示历史搜索记录")
+    @GetMapping("getSearchWord")
+    public ResultResponse getSearchWord(@RequestParam("type") Integer type){
+        return ResultResponse.success(articleService.getSearchWord(type));
+    }
 }
 

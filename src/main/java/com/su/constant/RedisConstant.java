@@ -15,4 +15,17 @@ public class RedisConstant {
         return EMAIL_CODE_KEY_PREFIX + email;
     }
 
+    /**
+     * 用户搜索记录key
+     *
+     * @param username
+     * @return
+     */
+    private static final String SEARCH = "SEARCH:";
+    public static final String HOT_SEARCH_KEY = "hot_search_key";
+
+    public static String getSearchWordKey(String username) {
+        return SEARCH + username;
+    }
+
 }

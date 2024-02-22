@@ -42,14 +42,7 @@ public interface ArticleService extends IService<Article> {
      * 首页文章显示
      * @return
      */
-    SearchVO search();
-
-    /**
-     * 根据条件查询es文章
-     * @param query
-     * @return
-     */
-    List<SearchVO> searchByCondition(String query);
+    SearchVO search(String query);
 
     /**
      * 过滤敏感词
@@ -57,4 +50,23 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     String filterWord(String word);
+
+    /**
+     * 添加搜索记录
+     * @param word
+     */
+    Boolean addSearchWord(String word);
+
+    /**
+     * 删除搜索记录
+     * @param word
+     * @return
+     */
+    Boolean deleteSearchWord();
+
+    /**
+     * 展示历史搜索记录
+     * @return
+     */
+    List<String> getSearchWord(Integer type);
 }

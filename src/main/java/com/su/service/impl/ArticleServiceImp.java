@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.su.common.exception.MyException;
+import com.su.constant.RedisConstant;
 import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.pojo.Account;
 import com.su.domain.pojo.Article;
@@ -22,6 +23,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -35,6 +37,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,7 +65,10 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
     @Autowired
     private RestHighLevelClient restHighLevelClient;
 
-    private static final String REPLACE_WORD="**";
+    private static final String REPLACE_WORD = "**";
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     /**
      * 图片上传
@@ -134,13 +141,18 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
      * @return
      */
     @Override
-    public SearchVO search() {
+    public SearchVO search(String query) {
         SearchVO searchVO = new SearchVO();
         try {
             //查询文章数据
             SearchRequest searchRequest = new SearchRequest("article_es_entity");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.sort(SortBuilders.fieldSort("viewNum").order(SortOrder.DESC));
+            //有查询条件
+            if (StringUtils.isNotEmpty(query)) {
+                searchSourceBuilder.query(QueryBuilders.matchQuery("title", query));
+            }
+
             searchRequest.source(searchSourceBuilder);
             SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             //处理返回结果
@@ -164,6 +176,10 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
             searchSourceBuilder.aggregation(AggregationBuilders.terms("group_agg")
                     .field("groupName"));
             searchSourceBuilder.size(0);
+            //有查询条件
+            if (StringUtils.isNotEmpty(query)) {
+                searchSourceBuilder.query(QueryBuilders.matchQuery("title", query));
+            }
             searchRequest.source(searchSourceBuilder);
             response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             //获取分类数据，map
@@ -190,27 +206,28 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     /**
      * 过滤敏感词
+     *
      * @param word
      * @return
      */
     @Override
     public String filterWord(String word) {
-        if (StringUtils.isBlank(word)){
+        if (StringUtils.isBlank(word)) {
             return "";
         }
         //指针1指向字典树根节点
-        TrimTreeUtil.Trim beginTrim=TrimTreeUtil.trim;
+        TrimTreeUtil.Trim beginTrim = TrimTreeUtil.trim;
         //替换的字符串
-        StringBuilder stringBuilder=new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         //两个指针指向字符串区间
-        int begin=0;
-        int end=0;
-        while (end<word.length()){
+        int begin = 0;
+        int end = 0;
+        while (end < word.length()) {
             char c = word.charAt(end);
             //为标点符号
-            if (TrimTreeUtil.isSymbol(c)){
+            if (TrimTreeUtil.isSymbol(c)) {
                 //begin对应的字符不在字典树中
-                if (beginTrim==TrimTreeUtil.trim){
+                if (beginTrim == TrimTreeUtil.trim) {
                     stringBuilder.append(c);//符号追加
                     begin++;
                 }
@@ -220,19 +237,19 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
             //获取子节点
             beginTrim = beginTrim.getSubTrim(c);
             //字符不存在字典树中
-            if (beginTrim==null){
+            if (beginTrim == null) {
                 //begin字符不是敏感词
                 stringBuilder.append(word.charAt(begin));
-                end=++begin;
-                beginTrim=TrimTreeUtil.trim;
+                end = ++begin;
+                beginTrim = TrimTreeUtil.trim;
             }
             //字符存在字典树中，且为结尾
-            else if (beginTrim.getIsEnd()){
+            else if (beginTrim.getIsEnd()) {
                 //采用*替代字符串
                 stringBuilder.append(REPLACE_WORD);
-                begin=++end;
+                begin = ++end;
                 //字典树回到根节点
-                beginTrim=TrimTreeUtil.trim;
+                beginTrim = TrimTreeUtil.trim;
             }
             //字符在字典树
             else {
@@ -246,14 +263,66 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
     }
 
     /**
-     * 根据条件查询es文章数据
-     * @param query
+     * 添加用户搜索记录
+     *
+     * @param word
+     */
+    @Override
+    public Boolean addSearchWord(String word) {
+        String username = ThreadLocalUtil.getAccount().getUsername();
+        //保存用户搜索记录
+        String redisKey = RedisConstant.getSearchWordKey(username);
+        //若队列中有搜索过改数据，先删除再添加
+        redisTemplate.opsForList().remove(redisKey,0,word);
+        redisTemplate.opsForList().leftPush(redisKey, word);
+        //保存热门搜索记录
+        Double score = redisTemplate.opsForZSet().score(RedisConstant.HOT_SEARCH_KEY, word);
+        if (score == null) {
+            redisTemplate.opsForZSet().add(RedisConstant.HOT_SEARCH_KEY, word, 1);
+        } else {
+            redisTemplate.opsForZSet().incrementScore(RedisConstant.HOT_SEARCH_KEY,word,1);
+        }
+        return true;
+    }
+
+    /**
+     * 删除搜索记录
      * @return
      */
     @Override
-    public List<SearchVO> searchByCondition(String query) {
+    public Boolean deleteSearchWord() {
+        String username = ThreadLocalUtil.getAccount().getUsername();
+        //保存用户搜索记录
+        String redisKey = RedisConstant.getSearchWordKey(username);
+        redisTemplate.delete(redisKey);
+        return true;
+    }
 
-        return null;
+    /**
+     * 展示历史搜索记录
+     * type 1历史记录 2热门记录
+     * @return
+     */
+    @Override
+    public List<String> getSearchWord(Integer type) {
+        String username = ThreadLocalUtil.getAccount().getUsername();
+        //保存用户搜索记录
+        String redisKey = RedisConstant.getSearchWordKey(username);
+        if(type==1){
+            List<Object> range = redisTemplate.opsForList().range(redisKey, 0, -1);
+            if(ObjectUtils.isEmpty(range)){
+                return new ArrayList<>();
+            }else{
+                return range.stream().map(o->(String)o).collect(Collectors.toList());
+            }
+        }else{
+            Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisTemplate.opsForZSet().rangeWithScores(RedisConstant.HOT_SEARCH_KEY, 0, 9);
+            if(ObjectUtils.isEmpty(typedTuples)){
+                return new ArrayList<>();
+            }else{
+                return typedTuples.stream().map(t->(String)t.getValue()).collect(Collectors.toList());
+            }
+        }
     }
 }
 
