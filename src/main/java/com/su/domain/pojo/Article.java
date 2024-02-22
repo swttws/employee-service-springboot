@@ -72,4 +72,11 @@ public class Article extends BaseEntity implements Serializable {
     @ApiModelProperty("分类名称")
     @TableField("group_name")
     private String groupName;
+
+    @ApiModelProperty("浏览数")
+    @TableField("view_num")
+    private Integer viewNum;
+
+    @TableField(exist = false)
+    private String username;
 }

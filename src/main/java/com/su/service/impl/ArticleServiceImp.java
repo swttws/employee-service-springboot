@@ -12,6 +12,7 @@ import com.su.domain.vo.ArticleVO;
 import com.su.domain.vo.SearchVO;
 import com.su.mapper.ArticleMapper;
 import com.su.mq.producer.RabbitProducer;
+import com.su.service.AccountService;
 import com.su.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.su.utils.ThreadLocalUtil;
@@ -69,6 +70,9 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
 
     @Autowired
     private RedisTemplate<String,Object> redisTemplate;
+
+    @Autowired
+    private AccountService accountService;
 
     /**
      * 图片上传
@@ -323,6 +327,22 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
                 return typedTuples.stream().map(t->(String)t.getValue()).collect(Collectors.toList());
             }
         }
+    }
+
+    /**
+     * 访问文章详情
+     * @param id
+     * @return
+     */
+    @Override
+    public Article getByIdAndAdd(Integer id) {
+        Article article = baseMapper.selectById(id);
+        article.setUsername(accountService.getById(article.getUserId()).getUsername());
+        //更新es和数据库
+        article.setViewNum(Objects.isNull(article.getViewNum())?0:article.getViewNum()+1);
+        baseMapper.updateById(article);
+        rabbitProducer.send(article);
+        return article;
     }
 }
 

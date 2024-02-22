@@ -80,5 +80,12 @@ public class ArticleController {
     public ResultResponse getSearchWord(@RequestParam("type") Integer type){
         return ResultResponse.success(articleService.getSearchWord(type));
     }
+
+    @ApiOperation("根据id查询文章信息，添加浏览量")
+    @GetMapping("getByIdAndAdd/{id}")
+    public ResultResponse getByIdAndAdd(@PathVariable("id") Integer id){
+        return ResultResponse.success(articleService.getByIdAndAdd(id));
+    }
+
 }
 

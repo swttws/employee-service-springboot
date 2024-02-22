@@ -69,4 +69,11 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     List<String> getSearchWord(Integer type);
+
+    /**
+     * 文章详情访问
+     * @param id
+     * @return
+     */
+    Article getByIdAndAdd(Integer id);
 }
