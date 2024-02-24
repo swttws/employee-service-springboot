@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.su.base.BaseEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +24,7 @@ import lombok.Data;
 @TableName("article_relation")
 @ApiModel(value = "ArticleRelation对象", description = "")
 @Data
-public class ArticleRelation implements Serializable {
+public class ArticleRelation extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

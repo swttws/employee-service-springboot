@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/articleRelation")
+@CrossOrigin
 public class ArticleRelationController {
 
     @Autowired
