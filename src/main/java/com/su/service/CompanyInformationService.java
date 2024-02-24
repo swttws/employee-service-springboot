@@ -13,4 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface CompanyInformationService extends IService<CompanyInformation> {
 
+    /**
+     * 修改公司信息
+     * @param companyInformation
+     * @return
+     */
+    Boolean updateCompanyInfo(CompanyInformation companyInformation);
 }

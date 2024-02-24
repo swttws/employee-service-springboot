@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import com.su.base.BaseEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 
 /**
@@ -60,4 +61,8 @@ public class CompanyInformation extends BaseEntity implements Serializable {
     @ApiModelProperty("描述")
     @TableField("description")
     private String description;
+
+    @ApiModelProperty("位置")
+    @TableField("address")
+    private String address;
 }
