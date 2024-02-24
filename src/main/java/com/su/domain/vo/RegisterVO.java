@@ -21,4 +21,7 @@ public class RegisterVO {
     @ApiModelProperty("验证码")
     private String code;
 
+    @ApiModelProperty("公司名")
+    private String companyName;
+
 }

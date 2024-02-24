@@ -40,4 +40,12 @@ public class Account extends BaseEntity implements Serializable{
     @TableField("salt")
     private String salt;
 
+    @ApiModelProperty("关联信息id")
+    @TableField("third_id")
+    private Integer thirdId;
+
+    @ApiModelProperty("类型，1用户，2公司")
+    @TableField("type")
+    private Integer type;
+
 }
