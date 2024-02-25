@@ -36,7 +36,7 @@ public class GeneratorCode {
                             .pathInfo(Collections.singletonMap(OutputFile.mapperXml, "D:\\java-mianshi\\Audition\\java-PlateForm-app\\src\\main\\resources\\mapper")); // 设置mapperXml生成路;
                 })
                 .strategyConfig(builder -> {
-                    builder.addInclude("company_information") // 设置需要生成的表名
+                    builder.addInclude("job") // 设置需要生成的表名
                             .entityBuilder()
                             .enableTableFieldAnnotation()
                             .addTableFills(new Column("create_time", FieldFill.INSERT))
