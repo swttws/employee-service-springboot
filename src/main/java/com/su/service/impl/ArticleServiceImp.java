@@ -136,7 +136,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         article.setIsDeleted(false);
         baseMapper.updateById(article);
         //通知mq，将文章数据写入es
-        rabbitProducer.send(article);
+        rabbitProducer.send(article,"Article");
     }
 
     /**
@@ -341,7 +341,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         //更新es和数据库
         article.setViewNum(Objects.isNull(article.getViewNum())?0:article.getViewNum()+1);
         baseMapper.updateById(article);
-        rabbitProducer.send(article);
+        rabbitProducer.send(article,"Article");
         return article;
     }
 }

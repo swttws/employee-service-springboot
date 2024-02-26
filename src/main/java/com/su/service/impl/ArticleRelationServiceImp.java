@@ -94,7 +94,7 @@ public class ArticleRelationServiceImp extends ServiceImpl<ArticleRelationMapper
             article.setCollectNum(isAdd ? collectNum + 1 : collectNum > 0 ? collectNum - 1 : 0);
         }
         articleService.updateById(article);
-        rabbitProducer.send(article);
+        rabbitProducer.send(article,"Article");
     }
 
     private Integer dealVale(Integer value) {

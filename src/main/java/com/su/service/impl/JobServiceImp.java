@@ -8,12 +8,15 @@ import com.su.domain.pojo.Account;
 import com.su.domain.pojo.CompanyInformation;
 import com.su.domain.pojo.Job;
 import com.su.mapper.JobMapper;
+import com.su.mq.producer.RabbitProducer;
 import com.su.service.CompanyInformationService;
 import com.su.service.JobService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.su.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
  * <p>
@@ -29,6 +32,9 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
     @Autowired
     private CompanyInformationService companyInformationService;
 
+    @Autowired
+    private RabbitProducer rabbitProducer;
+
     /**
      * 保存或更新职位
      *
@@ -43,6 +49,9 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
             throw new MyException(500, "请完善职位信息");
         }
         if (ObjectUtils.isNotEmpty(job.getId())) {
+            if (job.getIsSend()==1){
+                throw new MyException(500,"职位发布中，下架才可以修改");
+            }
             baseMapper.deleteById(job);
         }
         Account account = ThreadLocalUtil.getAccount();
@@ -53,6 +62,7 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
             throw new MyException(500, "请先完善公司基本信息");
         }
         //设置基础信息
+        job.setCreateTime(new Date());
         job.setCompanyId(String.valueOf(companyInformation.getId()));
         if(ObjectUtils.isEmpty(job.getAddress())){
             job.setAddress(companyInformation.getAddress());
@@ -99,7 +109,7 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
     /**
      * 职位撤销与发布
      * @param jobId
-     * @param type
+     * @param type 1发布 2未发布
      * @return
      */
     @Override
@@ -109,7 +119,7 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
         //TODO 审核机制
         baseMapper.updateById(job);
         //职位发布，更新es
-
+        rabbitProducer.send(job,"Job");
         return true;
     }
 }

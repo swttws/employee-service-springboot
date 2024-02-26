@@ -8,11 +8,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -22,12 +24,11 @@ import java.io.Serializable;
  * @author swt 2023-12-18
  * @since 2024-02-24
  */
-@TableName("job")
-@ApiModel(value = "Job对象", description = "")
 @Data
 @EsIndex
 @Component
-public class JobEsEntity extends BaseEntity implements Serializable {
+@Document(indexName = "job_es_entity")
+public class JobEsEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -73,5 +74,9 @@ public class JobEsEntity extends BaseEntity implements Serializable {
     @ApiModelProperty("是否发布，1发布，2未发布")
     @Field(type = FieldType.Integer)
     private Integer isSend;
+
+    @ApiModelProperty("创建时间")
+    @Field(type = FieldType.Date)
+    private Date createTime;
 
 }
