@@ -28,4 +28,13 @@ public class RedisConstant {
         return SEARCH + username;
     }
 
+    private static final String FRIEND_LIST = "friend_list:";
+
+    public static String getFriendListKey(Integer myId) {
+        return FRIEND_LIST + myId;
+    }
+
+    public static String getOtherIdMsg(Integer otherId, Integer count) {
+        return otherId + CommonConstant.REDIS_SEPARATORS + count;
+    }
 }

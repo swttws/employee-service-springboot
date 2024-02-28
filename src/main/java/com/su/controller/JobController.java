@@ -3,6 +3,7 @@ package com.su.controller;
 
 import com.su.common.response.ResultResponse;
 import com.su.domain.pojo.Job;
+import com.su.domain.vo.QueryJobVO;
 import com.su.service.JobService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,18 @@ public class JobController {
     @GetMapping("getById/{id}")
     public ResultResponse getById(@PathVariable("id") Integer id){
         return ResultResponse.success(jobService.getById(id));
+    }
+
+    @ApiOperation("首页职位展示app，带条件查询")
+    @PostMapping("queryList")
+    public ResultResponse queryList(@RequestBody QueryJobVO queryJobVO){
+        return ResultResponse.success(jobService.queryList(queryJobVO));
+    }
+
+    @ApiOperation("获取职位详情,以及关联关系")
+    @GetMapping("getJobDetail/{jobId}")
+    public ResultResponse getJobDetail(@PathVariable("jobId") Integer jobId){
+        return ResultResponse.success(jobService.getJobDetail(jobId));
     }
 
 }

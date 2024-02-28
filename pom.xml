@@ -97,6 +97,12 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
+<!--        netty-->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.77.Final</version>
+        </dependency>
 
 
     </dependencies>

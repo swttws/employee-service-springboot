@@ -1,8 +1,11 @@
 package com.su.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.su.domain.dto.JobDetailDTO;
+import com.su.domain.es.JobEsEntity;
 import com.su.domain.pojo.Job;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.su.domain.vo.QueryJobVO;
 
 import java.util.List;
 
@@ -43,4 +46,18 @@ public interface JobService extends IService<Job> {
      * @return
      */
     Boolean operatorJob(Integer jobId, Integer type);
+
+    /**
+     * 带条件查询职位列表
+     * @param queryJobVO
+     * @return
+     */
+    List<JobEsEntity> queryList(QueryJobVO queryJobVO);
+
+    /**
+     * 获取职详情和相关信息
+     * @param jobId
+     * @return
+     */
+    JobDetailDTO getJobDetail(Integer jobId);
 }
