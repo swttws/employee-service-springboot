@@ -34,7 +34,17 @@ public class RedisConstant {
         return FRIEND_LIST + myId;
     }
 
-    public static String getOtherIdMsg(Integer otherId, Integer count) {
-        return otherId + CommonConstant.REDIS_SEPARATORS + count;
+    public static String getOtherIdMsg(Integer otherId, Integer count,long time) {
+        return otherId + CommonConstant.REDIS_SEPARATORS + count+CommonConstant.REDIS_SEPARATORS+time;
+    }
+
+    private static final String CHAT_KEY = "chat:";
+
+    public static String getChatKey(Integer sendId, Integer receiverId) {
+        return CHAT_KEY + sendId + ":" + receiverId;
+    }
+
+    public static String getChatValue(String sendUserName, String msg) {
+        return sendUserName + CommonConstant.REDIS_SEPARATORS + msg;
     }
 }

@@ -2,6 +2,7 @@ package com.su.netty.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import com.su.netty.protocol.MyMessage;
+import com.su.netty.strategy.HandlerMessage;
 import com.su.service.ChatService;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,9 +20,13 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<TextWebS
 
     private ChatService chatService;
 
-    public WebSocketServerHandler(RedisTemplate<String, Object> redisTemplate, ChatService chatService) {
+    private HandlerMessage handlerMessage;
+
+    public WebSocketServerHandler(RedisTemplate<String, Object> redisTemplate, ChatService chatService
+            , HandlerMessage handlerMessage) {
         this.redisTemplate = redisTemplate;
         this.chatService = chatService;
+        this.handlerMessage = handlerMessage;
     }
 
     //处理客户端发送过来的消息
@@ -35,6 +40,9 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<TextWebS
         JSONObject jsonObject = JSONObject.parseObject(text);
         MyMessage message = jsonObject.toJavaObject(MyMessage.class);
 
+        //处理发送过来的消息
+        //采用不同策略处理不同的消息事件
+        handlerMessage.handlerMessage(channel, message);
 
     }
 

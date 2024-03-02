@@ -2,6 +2,7 @@ package com.su.netty;
 
 
 import com.su.netty.handler.WebSocketServerHandler;
+import com.su.netty.strategy.HandlerMessage;
 import com.su.service.ChatService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -38,6 +39,9 @@ public class NettyServer {
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
     private EventLoopGroup workGroup = new NioEventLoopGroup();
 
+    @Autowired
+    private HandlerMessage handlerMessage;
+
     private int port = 8181;
 
     //启动netty服务
@@ -66,7 +70,7 @@ public class NettyServer {
                             pipeline.addLast(new WebSocketServerProtocolHandler("/chatServer"));    //Inbound
 
                             //自定义消息处理器
-                            pipeline.addLast(new WebSocketServerHandler(redisTemplate,chatService));
+                            pipeline.addLast(new WebSocketServerHandler(redisTemplate,chatService,handlerMessage));
                         }
                     });
             server.bind(port).addListener(future -> {

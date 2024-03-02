@@ -36,7 +36,8 @@ public class TokenInterceptor implements HandlerInterceptor {
     private final GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
     private final List<String> url = Arrays.asList("/account/login", "/account/register",
-            "/account/sendEmsCode", "/article/upload","/article/search","/error","/article/filterWord");
+            "/account/sendEmsCode", "/article/upload","/article/search","/error","/article/filterWord"
+    ,"");
 
 
     /**
