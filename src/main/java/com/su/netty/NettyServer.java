@@ -1,6 +1,7 @@
 package com.su.netty;
 
 
+import com.su.mapper.AccountMapper;
 import com.su.netty.handler.WebSocketServerHandler;
 import com.su.netty.strategy.HandlerMessage;
 import com.su.service.ChatService;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
@@ -41,6 +43,9 @@ public class NettyServer {
 
     @Autowired
     private HandlerMessage handlerMessage;
+
+    @Autowired
+    private AccountMapper accountMapper;
 
     private int port = 8181;
 
@@ -70,7 +75,8 @@ public class NettyServer {
                             pipeline.addLast(new WebSocketServerProtocolHandler("/chatServer"));    //Inbound
 
                             //自定义消息处理器
-                            pipeline.addLast(new WebSocketServerHandler(redisTemplate,chatService,handlerMessage));
+                            pipeline.addLast(new WebSocketServerHandler(redisTemplate, chatService,
+                                    handlerMessage,accountMapper));
                         }
                     });
             server.bind(port).addListener(future -> {

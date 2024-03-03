@@ -1,11 +1,14 @@
 package com.su.controller;
 
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.su.common.response.ResultResponse;
+import com.su.domain.pojo.Account;
 import com.su.domain.vo.EmailVO;
 import com.su.domain.vo.LoginVO;
 import com.su.domain.vo.RegisterVO;
 import com.su.service.AccountService;
+import com.su.utils.JwtUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,5 +48,14 @@ public class AccountController {
     public ResultResponse sendEmsCode(@RequestBody EmailVO emailVO) {
         return ResultResponse.success(accountService.sendEmsCode(emailVO));
     }
+
+    @ApiOperation("解析token")
+    @GetMapping("/token/{token}")
+    public ResultResponse token(@PathVariable("token") String token) {
+        String userName = JwtUtils.getUserName(token);
+        Account account = accountService.getOne(Wrappers.<Account>lambdaQuery().eq(Account::getUsername, userName));
+        return ResultResponse.success(account);
+    }
+
 }
 

@@ -21,7 +21,7 @@ public class JwtUtils {
     /**
      * 默认七天过期
      */
-    private static final long TIME_OUT = 4 * 24 * 60 * 60 * 1000;
+    private static final long TIME_OUT = 4L * 24 * 60 * 60 * 1000 * 1000;
 
     /**
      * 生成token

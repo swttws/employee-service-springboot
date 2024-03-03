@@ -1,80 +1,68 @@
-//package com.su.netty.strategy;
-//
-//import com.alibaba.fastjson.JSON;
-//import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-//import com.su.netty.protocol.MyMessage;
-//import com.su.netty.protocol.Type;
-//import io.netty.channel.Channel;
-//import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.beans.BeanUtils;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.data.redis.core.RedisTemplate;
-//import org.springframework.stereotype.Component;
-//
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-////客户端请求连接处理事件
-//@Component
-//@TypeAnnotation(Type.CONNECT_EVENT)
-//@Slf4j
-//public class ConnectStrategy implements MessageStrategy{
-//
-//    @Autowired
-//    private RedisTemplate<String,Object> redisTemplate;
-//
-//    //连接处理逻辑
-//    @Override
-//    public void handleMessage(Channel channel, MyMessage msg) {
-//        log.info("connect连接事件触发----");
-//        //解析消息体
-//        channel.attr(HandlerMessage.MY_MESSAGE_ATTRIBUTE_KEY).getAndSet(msg);
-//        //添加到在线用户列表
-//        HandlerMessage.onlineGroup.remove(channel);
-//        HandlerMessage.onlineGroup.add(channel);
-//        //根据自己的用户id获取好友列表
-//        List<Friend> friendList = friendService.list(Wrappers.<Friend>lambdaQuery().
-//                eq(Friend::getUserId, msg.getSendUserId()).
-//                eq(Friend::getStatus, 1).
-//                select(Friend::getFriendId));
-//        List<Integer> friendIdList = friendList.stream()
-//                .map(Friend::getFriendId)
-//                .collect(Collectors.toList());
-//
-//        //同步数据库会话到redis中
-//        //查询单聊,群聊会话，保存到redis中
-//        dialogService.getDialogByTypeToRedis(msg.getSendUserId(),1);
-//        dialogService.getDialogByTypeToRedis(msg.getSendUserId(),2);
-//
-//        //通知客户端好友上线通知
-//        for (Channel client : HandlerMessage.onlineGroup) {
-//            //判断是否为自己
-//            boolean itself=(client==channel);
-//            //获取attr属性
-//            MyMessage channelMessage = channel.attr(HandlerMessage.MY_MESSAGE_ATTRIBUTE_KEY).get();
-//            //不是自己，且为自己的好友
-//            if (!itself&&friendIdList.contains(channelMessage.getSendUserId())){
-//                String content="你的好友["+channelMessage.getSendUserName()+"]已经上线";
-//                //封装数据包发送给客户端
-//                MyMessage message = new MyMessage();
-//                BeanUtils.copyProperties(channelMessage,message);
-//                message.setData(content);
-//                message.setType(Type.FRIEND_ONLINE);
-//                //写回客户端
-//                String m = JSON.toJSONString(message);
-//                client.writeAndFlush(new TextWebSocketFrame(m));
-//            }
-//        }
-//        log.info("连接数"+HandlerMessage.onlineGroup.size());
-//
-//    }
-//
-//    //处理mq消息
-//    @Override
-//    public void dealMqMessage(MyMessage message) {
-//
-//    }
-//
-//
-//}
+package com.su.netty.strategy;
+
+import com.alibaba.fastjson.JSON;
+import com.auth0.jwt.JWT;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.su.domain.pojo.Account;
+import com.su.mapper.AccountMapper;
+import com.su.netty.protocol.MyMessage;
+import com.su.netty.protocol.Type;
+import com.su.utils.JwtUtils;
+import com.su.utils.ThreadLocalUtil;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+//客户端请求连接处理事件
+@Component
+@TypeAnnotation(Type.CONNECT_EVENT)
+@Slf4j
+public class ConnectStrategy implements MessageStrategy {
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private AccountMapper accountMapper;
+
+    @Autowired
+    public static ConcurrentHashMap<Integer, Channel> userId2ChannelMap = new ConcurrentHashMap<>();
+
+    //连接处理逻辑
+    @Override
+    public void handleMessage(Channel channel, MyMessage msg) {
+        log.info("connect连接事件触发----");
+        //解析消息体
+        channel.attr(HandlerMessage.MY_MESSAGE_ATTRIBUTE_KEY).getAndSet(msg);
+        //添加到在线用户列表
+        HandlerMessage.onlineGroup.remove(channel);
+        HandlerMessage.onlineGroup.add(channel);
+
+        //保存用户id ：channel映射关系
+        userId2ChannelMap.remove(msg.getSendUserId());
+        userId2ChannelMap.put(msg.getSendUserId(), channel);
+
+        log.info("映射关系:{}", userId2ChannelMap);
+        log.info("新的连接建立：{}", channel);
+        log.info("连接数" + HandlerMessage.onlineGroup.size());
+
+    }
+
+    //处理mq消息
+    @Override
+    public void dealMqMessage(MyMessage message) {
+
+    }
+
+
+}

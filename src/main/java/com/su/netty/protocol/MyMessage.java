@@ -29,4 +29,6 @@ public class MyMessage implements Serializable {
 
     private String ipaddr;//ip地址以及端口号
 
+    private String token;
+
 }

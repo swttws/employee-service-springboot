@@ -1,9 +1,13 @@
 package com.su.netty.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.su.domain.pojo.Account;
+import com.su.mapper.AccountMapper;
 import com.su.netty.protocol.MyMessage;
 import com.su.netty.strategy.HandlerMessage;
 import com.su.service.ChatService;
+import com.su.utils.JwtUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -22,11 +26,14 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<TextWebS
 
     private HandlerMessage handlerMessage;
 
+    private AccountMapper accountMapper;
+
     public WebSocketServerHandler(RedisTemplate<String, Object> redisTemplate, ChatService chatService
-            , HandlerMessage handlerMessage) {
+            , HandlerMessage handlerMessage, AccountMapper accountMapper) {
         this.redisTemplate = redisTemplate;
         this.chatService = chatService;
         this.handlerMessage = handlerMessage;
+        this.accountMapper = accountMapper;
     }
 
     //处理客户端发送过来的消息
@@ -40,10 +47,16 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<TextWebS
         JSONObject jsonObject = JSONObject.parseObject(text);
         MyMessage message = jsonObject.toJavaObject(MyMessage.class);
 
+        String userName = JwtUtils.getUserName(message.getToken());
+        Integer id = accountMapper.selectOne(Wrappers.<Account>lambdaQuery()
+                .eq(Account::getUsername, userName)).getId();
+
+        message.setSendUserId(id);
+        message.setSendUserName(userName);
+
         //处理发送过来的消息
         //采用不同策略处理不同的消息事件
         handlerMessage.handlerMessage(channel, message);
-
     }
 
     //发生异常时关闭连接
