@@ -22,6 +22,7 @@ public class DisconnectStrategy implements MessageStrategy{
     //消息处理
     @Override
     public void handleMessage(Channel channel, MyMessage msg) {
+        log.info("连接关闭事件----------------");
         ConnectStrategy.userId2ChannelMap.remove(msg.getSendUserId());
         HandlerMessage.onlineGroup.remove(channel);
 

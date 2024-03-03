@@ -1,6 +1,7 @@
 package com.su.service;
 
 import com.su.domain.dto.ChatDTO;
+import com.su.netty.protocol.MessageData;
 import com.su.netty.protocol.MyMessage;
 
 import java.util.List;
@@ -25,10 +26,21 @@ public interface ChatService {
      */
     List<ChatDTO> getFriendList(Integer id);
 
+    void saveRedis(String friendListKey, Integer otherId,Integer isAdd);
+
     /**
-     * 保存聊天记录
-     * @param myMessage
+     * 获取消息
+     * @param myId
+     * @param otherId
      * @return
      */
-    Boolean saveChat(MyMessage myMessage);
+    List<MessageData> getChatList(Integer myId, Integer otherId);
+
+    /**
+     * 清除未读消息
+     * @param myId
+     * @param otherId
+     * @return
+     */
+    Boolean removeUnRead(Integer myId, Integer otherId);
 }

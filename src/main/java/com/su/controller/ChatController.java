@@ -32,4 +32,18 @@ public class ChatController {
         return ResultResponse.success(chatService.getFriendList(id));
     }
 
+    @ApiOperation("获取聊天信息")
+    @GetMapping("getChatList/{myId}/{otherId}")
+    public ResultResponse getChatList(@PathVariable("myId") Integer myId,
+                                      @PathVariable("otherId") Integer otherId){
+        return ResultResponse.success(chatService.getChatList(myId,otherId));
+    }
+
+    @ApiOperation("清除未读消息")
+    @GetMapping("removeUnRead/{myId}/{otherId}")
+    public ResultResponse removeUnRead(@PathVariable("myId") Integer myId,
+                                       @PathVariable("otherId") Integer otherId){
+        return ResultResponse.success(chatService.removeUnRead(myId,otherId));
+    }
+
 }
