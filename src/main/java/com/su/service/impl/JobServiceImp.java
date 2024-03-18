@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.su.annotation.RedissonLock;
 import com.su.common.exception.MyException;
 import com.su.domain.dto.JobDetailDTO;
 import com.su.domain.es.JobEsEntity;
@@ -68,6 +69,7 @@ public class JobServiceImp extends ServiceImpl<JobMapper, Job> implements JobSer
      * @return
      */
     @Override
+    @RedissonLock(methodName = "saveOrUpdateJob",flag = "#job.companyId")
     public Boolean saveOrUpdateJob(Job job) {
         if (ObjectUtils.isEmpty(job.getJobName()) || ObjectUtils.isEmpty(job.getWelfare())
                 || ObjectUtils.isEmpty(job.getJobProperties()) || ObjectUtils.isEmpty(job.getMinSalary())

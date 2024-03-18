@@ -3,6 +3,7 @@ package com.su.service;
 import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.pojo.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.su.domain.vo.ArticleDataVO;
 import com.su.domain.vo.ArticleVO;
 import com.su.domain.vo.SearchVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,7 +60,7 @@ public interface ArticleService extends IService<Article> {
 
     /**
      * 删除搜索记录
-     * @param word
+     *
      * @return
      */
     Boolean deleteSearchWord();
@@ -76,4 +77,23 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     Article getByIdAndAdd(Integer id);
+
+    /**
+     * 获取文章信息数据，文章列表
+     * @return
+     */
+    ArticleDataVO getCreateData();
+
+    /**
+     * 获取热门文章数据，前五
+     * @return
+     */
+    List<Article> getHotArticle();
+
+    /**
+     * 删除文章
+     * @param id
+     * @return
+     */
+    Boolean deleteById(Integer id);
 }

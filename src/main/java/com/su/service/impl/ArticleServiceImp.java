@@ -1,6 +1,7 @@
 package com.su.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.su.common.exception.MyException;
@@ -8,6 +9,7 @@ import com.su.constant.RedisConstant;
 import com.su.domain.es.ArticleEsEntity;
 import com.su.domain.pojo.Account;
 import com.su.domain.pojo.Article;
+import com.su.domain.vo.ArticleDataVO;
 import com.su.domain.vo.ArticleVO;
 import com.su.domain.vo.SearchVO;
 import com.su.mapper.ArticleMapper;
@@ -20,11 +22,13 @@ import com.su.utils.TrimTreeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -69,7 +73,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
     private static final String REPLACE_WORD = "**";
 
     @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private AccountService accountService;
@@ -136,7 +140,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         article.setIsDeleted(false);
         baseMapper.updateById(article);
         //通知mq，将文章数据写入es
-        rabbitProducer.send(article,"Article");
+        rabbitProducer.send(article, "Article");
     }
 
     /**
@@ -277,20 +281,21 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         //保存用户搜索记录
         String redisKey = RedisConstant.getSearchWordKey(username);
         //若队列中有搜索过改数据，先删除再添加
-        redisTemplate.opsForList().remove(redisKey,0,word);
+        redisTemplate.opsForList().remove(redisKey, 0, word);
         redisTemplate.opsForList().leftPush(redisKey, word);
         //保存热门搜索记录
         Double score = redisTemplate.opsForZSet().score(RedisConstant.HOT_SEARCH_KEY, word);
         if (score == null) {
             redisTemplate.opsForZSet().add(RedisConstant.HOT_SEARCH_KEY, word, 1);
         } else {
-            redisTemplate.opsForZSet().incrementScore(RedisConstant.HOT_SEARCH_KEY,word,1);
+            redisTemplate.opsForZSet().incrementScore(RedisConstant.HOT_SEARCH_KEY, word, 1);
         }
         return true;
     }
 
     /**
      * 删除搜索记录
+     *
      * @return
      */
     @Override
@@ -305,6 +310,7 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
     /**
      * 展示历史搜索记录
      * type 1历史记录 2热门记录
+     *
      * @return
      */
     @Override
@@ -312,25 +318,26 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         String username = ThreadLocalUtil.getAccount().getUsername();
         //保存用户搜索记录
         String redisKey = RedisConstant.getSearchWordKey(username);
-        if(type==1){
+        if (type == 1) {
             List<Object> range = redisTemplate.opsForList().range(redisKey, 0, -1);
-            if(ObjectUtils.isEmpty(range)){
+            if (ObjectUtils.isEmpty(range)) {
                 return new ArrayList<>();
-            }else{
-                return range.stream().map(o->(String)o).collect(Collectors.toList());
+            } else {
+                return range.stream().map(o -> (String) o).collect(Collectors.toList());
             }
-        }else{
+        } else {
             Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisTemplate.opsForZSet().rangeWithScores(RedisConstant.HOT_SEARCH_KEY, 0, 9);
-            if(ObjectUtils.isEmpty(typedTuples)){
+            if (ObjectUtils.isEmpty(typedTuples)) {
                 return new ArrayList<>();
-            }else{
-                return typedTuples.stream().map(t->(String)t.getValue()).collect(Collectors.toList());
+            } else {
+                return typedTuples.stream().map(t -> (String) t.getValue()).collect(Collectors.toList());
             }
         }
     }
 
     /**
      * 访问文章详情
+     *
      * @param id
      * @return
      */
@@ -339,10 +346,63 @@ public class ArticleServiceImp extends ServiceImpl<ArticleMapper, Article> imple
         Article article = baseMapper.selectById(id);
         article.setUsername(accountService.getById(article.getUserId()).getUsername());
         //更新es和数据库
-        article.setViewNum(Objects.isNull(article.getViewNum())?0:article.getViewNum()+1);
+        article.setViewNum(Objects.isNull(article.getViewNum()) ? 0 : article.getViewNum() + 1);
         baseMapper.updateById(article);
-        rabbitProducer.send(article,"Article");
+        rabbitProducer.send(article, "Article");
         return article;
+    }
+
+    /**
+     * 获取文章信息数据，文章列表
+     *
+     * @return
+     */
+    @Override
+    public ArticleDataVO getCreateData() {
+        ArticleDataVO articleDataVO = new ArticleDataVO();
+
+        Integer userId = ThreadLocalUtil.getAccount().getId();
+        List<Article> articleList = baseMapper.selectList(Wrappers.<Article>lambdaQuery()
+                .eq(Article::getUserId, userId));
+        //文章总数、文章列表
+        articleDataVO.setArticleTotal(articleList.size());
+        articleDataVO.setArticleList(articleList);
+
+        //点赞数
+        articleDataVO.setPraiseTotal((int) articleList.stream()
+                .filter(article -> ObjectUtils.isNotEmpty(article.getPraiseNum()))
+                .count());
+        //收藏数
+        articleDataVO.setCollectTotal((int) articleList.stream()
+                .filter(article -> ObjectUtils.isNotEmpty(article.getCollectNum()))
+                .count());
+
+        return articleDataVO;
+    }
+
+    /**
+     * 获取热门文章数据，前五
+     *
+     * @return
+     */
+    @Override
+    public List<Article> getHotArticle() {
+        return baseMapper.selectList(Wrappers.<Article>lambdaQuery()
+                .orderByDesc(Article::getViewNum).last("limit 5"));
+    }
+
+    @Override
+    public Boolean deleteById(Integer id) {
+        baseMapper.deleteById(id);
+        //删除es
+        DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest("article_es_entity");
+        deleteByQueryRequest.setQuery(QueryBuilders.matchQuery("id",id));
+        try {
+            restHighLevelClient.deleteByQuery(deleteByQueryRequest,RequestOptions.DEFAULT);
+        } catch (IOException ioException) {
+            log.info("es");
+        }
+        return true;
     }
 }
 

@@ -87,5 +87,23 @@ public class ArticleController {
         return ResultResponse.success(articleService.getByIdAndAdd(id));
     }
 
+    @ApiOperation("获取文章创作数据、文章数据")
+    @GetMapping("/getCreateData")
+    public ResultResponse getCreateData(){
+        return ResultResponse.success(articleService.getCreateData());
+    }
+
+    @ApiOperation("获取热门文章，前5个")
+    @GetMapping("getHotArticle")
+    public ResultResponse getHotArticle(){
+        return ResultResponse.success(articleService.getHotArticle());
+    }
+
+    @ApiOperation("文章删除")
+    @GetMapping("deleteById/{id}")
+    public ResultResponse deleteById(@PathVariable("id") Integer id){
+        return ResultResponse.success(articleService.deleteById(id));
+    }
+
 }
 
